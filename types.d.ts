@@ -2,7 +2,7 @@ import * as functools_kit from 'functools-kit';
 import * as typeorm from 'typeorm';
 import { DataSource } from 'typeorm';
 import { Redis } from 'ioredis';
-import { CandleInterval, ISignalRow, IScheduledSignalRow, StrategyData, RiskData, PartialData, BreakevenData, IStorageSignalRow, NotificationModel, ILogEntry, MeasureData, IntervalData, MemoryData, IPublicSignalRow, StateData, SessionData } from 'backtest-kit';
+import { CandleInterval, ISignalRow, IScheduledSignalRow, StrategyData, RiskData, PartialData, BreakevenData, IStorageSignalRow, NotificationModel, ILogEntry, MeasureData, IntervalData, MemoryData, IPublicSignalRow, StateData, BudgetData, DictionaryData, SessionData } from 'backtest-kit';
 
 interface ILogger {
     log(topic: string, ...args: any[]): void;
@@ -837,6 +837,121 @@ declare class StateCacheService extends StateCacheService_base {
     setStateId(row: IStateRow): Promise<string>;
 }
 
+interface IBudgetDto {
+    strategyName: string;
+    exchangeName: string;
+    frameName: string;
+    backtest: boolean;
+    name: string;
+    payload: BudgetData;
+    when: number;
+}
+interface IBudgetRow extends IBudgetDto {
+    id: string;
+    createDate: Date;
+    updatedDate: Date;
+}
+
+type BudgetRecordKey$1 = {
+    strategyName: string;
+    exchangeName: string;
+    frameName: string;
+    backtest: boolean;
+};
+declare const BudgetCacheService_base: (new () => {
+    readonly loggerService: LoggerService;
+    readonly connectionKey: string;
+    readonly ttlExpireSeconds: number;
+    _getItemKey(key: string): string;
+    set(key: string, value: unknown): Promise<void>;
+    get(key: string | null): Promise<unknown | null>;
+    delete(key: string): Promise<void>;
+    has(key: string): Promise<boolean>;
+    clear(): Promise<void>;
+    toArray(): Promise<[string, unknown][]>;
+    iterate(): AsyncIterableIterator<readonly [string, unknown]>;
+    keys(): AsyncIterableIterator<string>;
+    values(): AsyncIterableIterator<unknown>;
+    size(): Promise<number>;
+}) & Omit<{
+    new (connectionKey: string, ttlExpireSeconds?: number): {
+        readonly loggerService: LoggerService;
+        readonly connectionKey: string;
+        readonly ttlExpireSeconds: number;
+        _getItemKey(key: string): string;
+        set(key: string, value: unknown): Promise<void>;
+        get(key: string | null): Promise<unknown | null>;
+        delete(key: string): Promise<void>;
+        has(key: string): Promise<boolean>;
+        clear(): Promise<void>;
+        toArray(): Promise<[string, unknown][]>;
+        iterate(): AsyncIterableIterator<readonly [string, unknown]>;
+        keys(): AsyncIterableIterator<string>;
+        values(): AsyncIterableIterator<unknown>;
+        size(): Promise<number>;
+    };
+}, "prototype">;
+declare class BudgetCacheService extends BudgetCacheService_base {
+    readonly loggerService: LoggerService;
+    private _cacheKey;
+    hasBudgetId(key: BudgetRecordKey$1, name: string): Promise<boolean>;
+    getBudgetId(key: BudgetRecordKey$1, name: string): Promise<string | null>;
+    setBudgetId(row: IBudgetRow): Promise<string>;
+}
+
+interface IDictionaryDto {
+    signalId: string;
+    dictionaryName: string;
+    payload: DictionaryData;
+    when: number;
+}
+interface IDictionaryRow extends IDictionaryDto {
+    id: string;
+    createDate: Date;
+    updatedDate: Date;
+}
+
+declare const DictionaryCacheService_base: (new () => {
+    readonly loggerService: LoggerService;
+    readonly connectionKey: string;
+    readonly ttlExpireSeconds: number;
+    _getItemKey(key: string): string;
+    set(key: string, value: unknown): Promise<void>;
+    get(key: string | null): Promise<unknown | null>;
+    delete(key: string): Promise<void>;
+    has(key: string): Promise<boolean>;
+    clear(): Promise<void>;
+    toArray(): Promise<[string, unknown][]>;
+    iterate(): AsyncIterableIterator<readonly [string, unknown]>;
+    keys(): AsyncIterableIterator<string>;
+    values(): AsyncIterableIterator<unknown>;
+    size(): Promise<number>;
+}) & Omit<{
+    new (connectionKey: string, ttlExpireSeconds?: number): {
+        readonly loggerService: LoggerService;
+        readonly connectionKey: string;
+        readonly ttlExpireSeconds: number;
+        _getItemKey(key: string): string;
+        set(key: string, value: unknown): Promise<void>;
+        get(key: string | null): Promise<unknown | null>;
+        delete(key: string): Promise<void>;
+        has(key: string): Promise<boolean>;
+        clear(): Promise<void>;
+        toArray(): Promise<[string, unknown][]>;
+        iterate(): AsyncIterableIterator<readonly [string, unknown]>;
+        keys(): AsyncIterableIterator<string>;
+        values(): AsyncIterableIterator<unknown>;
+        size(): Promise<number>;
+    };
+}, "prototype">;
+declare class DictionaryCacheService extends DictionaryCacheService_base {
+    readonly loggerService: LoggerService;
+    private _cacheKey;
+    hasDictionaryId(signalId: string, dictionaryName: string): Promise<boolean>;
+    getDictionaryId(signalId: string, dictionaryName: string): Promise<string | null>;
+    setDictionaryId(row: IDictionaryRow): Promise<string>;
+}
+
 interface ISessionDto {
     strategyName: string;
     exchangeName: string;
@@ -1355,6 +1470,72 @@ declare class StateDbService extends StateDbService_base {
     findByContext: (signalId: string, bucketName: string) => Promise<IStateRow | null>;
 }
 
+type BudgetRecordKey = {
+    strategyName: string;
+    exchangeName: string;
+    frameName: string;
+    backtest: boolean;
+};
+declare const BudgetDbService_base: (new () => {
+    readonly loggerService: LoggerService;
+    readonly TargetModel: typeorm.EntitySchema<any>;
+    readonly entityName: string;
+    repo<T = any>(): Promise<typeorm.Repository<T>>;
+    create(dto: object): Promise<any>;
+    update(id: string, dto: object): Promise<any>;
+    findById(id: string): Promise<any>;
+    findByFilter(filterData: object, order?: object): Promise<any>;
+    findAll(filterData?: object, limit?: number, order?: object): Promise<any[]>;
+}) & Omit<{
+    new (TargetModel: typeorm.EntitySchema<any>): {
+        readonly loggerService: LoggerService;
+        readonly TargetModel: typeorm.EntitySchema<any>;
+        readonly entityName: string;
+        repo<T = any>(): Promise<typeorm.Repository<T>>;
+        create(dto: object): Promise<any>;
+        update(id: string, dto: object): Promise<any>;
+        findById(id: string): Promise<any>;
+        findByFilter(filterData: object, order?: object): Promise<any>;
+        findAll(filterData?: object, limit?: number, order?: object): Promise<any[]>;
+    };
+}, "prototype">;
+declare class BudgetDbService extends BudgetDbService_base {
+    readonly loggerService: LoggerService;
+    readonly budgetCacheService: BudgetCacheService;
+    upsert: (key: BudgetRecordKey, name: string, payload: BudgetData, when: Date) => Promise<void>;
+    findByContext: (key: BudgetRecordKey, name: string) => Promise<IBudgetRow | null>;
+}
+
+declare const DictionaryDbService_base: (new () => {
+    readonly loggerService: LoggerService;
+    readonly TargetModel: typeorm.EntitySchema<any>;
+    readonly entityName: string;
+    repo<T = any>(): Promise<typeorm.Repository<T>>;
+    create(dto: object): Promise<any>;
+    update(id: string, dto: object): Promise<any>;
+    findById(id: string): Promise<any>;
+    findByFilter(filterData: object, order?: object): Promise<any>;
+    findAll(filterData?: object, limit?: number, order?: object): Promise<any[]>;
+}) & Omit<{
+    new (TargetModel: typeorm.EntitySchema<any>): {
+        readonly loggerService: LoggerService;
+        readonly TargetModel: typeorm.EntitySchema<any>;
+        readonly entityName: string;
+        repo<T = any>(): Promise<typeorm.Repository<T>>;
+        create(dto: object): Promise<any>;
+        update(id: string, dto: object): Promise<any>;
+        findById(id: string): Promise<any>;
+        findByFilter(filterData: object, order?: object): Promise<any>;
+        findAll(filterData?: object, limit?: number, order?: object): Promise<any[]>;
+    };
+}, "prototype">;
+declare class DictionaryDbService extends DictionaryDbService_base {
+    readonly loggerService: LoggerService;
+    readonly dictionaryCacheService: DictionaryCacheService;
+    upsert: (signalId: string, dictionaryName: string, payload: DictionaryData, when: Date) => Promise<void>;
+    findByContext: (signalId: string, dictionaryName: string) => Promise<IDictionaryRow | null>;
+}
+
 declare const SessionDbService_base: (new () => {
     readonly loggerService: LoggerService;
     readonly TargetModel: typeorm.EntitySchema<any>;
@@ -1401,6 +1582,8 @@ declare const ioc: {
     memoryDbService: MemoryDbService;
     recentDbService: RecentDbService;
     stateDbService: StateDbService;
+    budgetDbService: BudgetDbService;
+    dictionaryDbService: DictionaryDbService;
     sessionDbService: SessionDbService;
     candleCacheService: CandleCacheService;
     signalCacheService: SignalCacheService;
@@ -1417,6 +1600,8 @@ declare const ioc: {
     memoryCacheService: MemoryCacheService;
     recentCacheService: RecentCacheService;
     stateCacheService: StateCacheService;
+    budgetCacheService: BudgetCacheService;
+    dictionaryCacheService: DictionaryCacheService;
     sessionCacheService: SessionCacheService;
     loggerService: LoggerService;
     postgresService: PostgresService;
